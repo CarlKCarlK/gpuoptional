@@ -1,6 +1,7 @@
 # License: Apache 2.0
 # Carl Kadie
 # https://fastlmm.github.io/
+
 import os
 import numpy as np
 import inspect
@@ -8,6 +9,7 @@ import logging
 from types import ModuleType
 
 _warn_array_module_once = False
+
 
 def array_module(xp=None):
     """
@@ -48,7 +50,7 @@ def array_module(xp=None):
         except ModuleNotFoundError as e:
             global _warn_array_module_once
             if not _warn_array_module_once:
-                logging.warn(f"Using numpy. ({e})")
+                logging.warning(f"Using numpy. ({e})")
                 _warn_array_module_once = True
             return np
 
@@ -89,61 +91,69 @@ def get_array_module(a):
     xp = array_module(module_name)
     return xp
 
+
 if __name__ == "__main__":
 
-def gen_data(size, seed=1, xp=None):
-   xp = array_module(xp)
-   rng = xp.random.RandomState(seed=seed)
-   a = rng.choice([0.0,1.0,2.0,xp.nan],size=size)
-   return a
-   
-a = gen_data((1_000,100_000))# Python 3.6+ allows _ in numbers
-print(type(a))
-print(a[:3,:3]) # print 1st 3 rows & cols
+    def gen_data(size, seed=1, xp=None):
+        xp = array_module(xp)
+        rng = xp.random.RandomState(seed=seed)
+        a = rng.choice([0.0, 1.0, 2.0, xp.nan], size=size)
+        return a
 
-a = gen_data((1_000,100_000),xp='cupy')
-print(type(a))
-print(a[:3,:3]) # print 1st 3 rows & cols
+    a = gen_data((1_000, 100_000))  # Python 3.6+ allows _ in numbers
+    print(type(a))
+    print(a[:3, :3])  # print 1st 3 rows & cols
 
-from unittest.mock import patch
-# 'patch' is a nice built-in Python function that can temporarily
-# add an item to a dictionary, including os.environ.
-with patch.dict('os.environ', {'ARRAY_MODULE': 'cupy'}) as _:
-   a = gen_data((5,5))
-print(type(a))
+    a = gen_data((1_000, 100_000), xp="cupy")
+    print(type(a))
+    print(a[:3, :3])  # print 1st 3 rows & cols
 
-def unit_standardize(a):
-   '''
-   Standardize array to zero-mean and unit standard deviation.
-   '''
-   xp = get_array_module(a)
-   assert a.dtype in [np.float64,np.float32], (
-      "a must be a float in order to standardize in place.")
-   imissX = xp.isnan(a)
-   snp_std = xp.nanstd(a, axis=0)
-   snp_mean = xp.nanmean(a, axis=0)
-   # avoid div by 0 when standardizing
-   snp_std[snp_std == 0.0] = xp.inf
-   a -= snp_mean
-   a /= snp_std
-   a[imissX] = 0
-   
-a = gen_data((1_000,100_000))
-unit_standardize(a)
-print(type(a))
-print(a[:3,:3]) #1st 3 rows and cols
+    from unittest.mock import patch
 
-a = gen_data((1_000,100_000), xp='cupy')
-unit_standardize(a)
-print(type(a))
+    # 'patch' is a nice built-in Python function that can temporarily
+    # add an item to a dictionary, including os.environ.
+    with patch.dict("os.environ", {"ARRAY_MODULE": "cupy"}) as _:
+        a = gen_data((5, 5))
+        print(type(a))
 
-a = gen_data((1_000,100_000))
-print(type(a)) # numpy
-xp = array_module(xp='cupy')
-a = xp.asarray(a)
-print(type(a)) # cupy
-unit_standardize(a)
-print(type(a)) # still, cupy
-a = asnumpy(a)
-print(type(a)) # numpy
-print(a[:3,:3]) # print 1st 3 rows and cols
+    def unit_standardize(a):
+        """
+        Standardize array to zero-mean and unit standard deviation.
+        """
+        xp = get_array_module(a)
+
+        assert a.dtype in [
+            np.float64,
+            np.float32,
+        ], "a must be a float in order to standardize in place."
+
+        imissX = xp.isnan(a)
+        snp_std = xp.nanstd(a, axis=0)
+        snp_mean = xp.nanmean(a, axis=0)
+        # avoid div by 0 when standardizing
+        snp_std[snp_std == 0.0] = xp.inf
+
+        a -= snp_mean
+        a /= snp_std
+        a[imissX] = 0
+
+    a = gen_data((1_000, 100_000))
+    unit_standardize(a)
+    print(type(a))
+    print(a[:3, :3])  # 1st 3 rows and cols
+
+    a = gen_data((1_000, 100_000), xp="cupy")
+    unit_standardize(a)
+    print(type(a))
+    print(a[:3, :3])  # 1st 3 rows and cols
+
+    a = gen_data((1_000, 100_000))
+    print(type(a))  # numpy
+    xp = array_module(xp="cupy")
+    a = xp.asarray(a)
+    print(type(a))  # cupy
+    unit_standardize(a)
+    print(type(a))  # still, cupy
+    a = asnumpy(a)
+    print(type(a))  # numpy
+    print(a[:3, :3])  # print 1st 3 rows and cols
