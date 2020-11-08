@@ -1,2 +1,2 @@
 # gpuoptional
-Utility functions that GPU-Optional Python Code
+Utility functions that enable GPU-Optional Python Code
