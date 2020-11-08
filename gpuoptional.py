@@ -108,10 +108,10 @@ if __name__ == "__main__":
     print(type(a))
     print(a[:3, :3])  # print 1st 3 rows & cols
 
-    from unittest.mock import patch
-
     # 'patch' is a nice built-in Python function that can temporarily
     # add an item to a dictionary, including os.environ.
+    from unittest.mock import patch
+
     with patch.dict("os.environ", {"ARRAY_MODULE": "cupy"}) as _:
         a = gen_data((5, 5))
         print(type(a))
